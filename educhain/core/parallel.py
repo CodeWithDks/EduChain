@@ -1,6 +1,9 @@
 """
 parallel.py
 
+Author: Deepak Singh (github.com/CodeWithDks)
+Project: EduChain — a mini LangChain clone, built for learning
+
 Runs multiple Runnable objects in parallel.
 
 Example:
@@ -37,6 +40,9 @@ class RunnableParallel(Runnable):
             summary=summary_chain,
             joke=joke_chain
         )
+
+        Pass verbose=True on invoke() if you want to see
+        each branch's progress while it runs.
         """
 
         if len(runnables) == 0:
@@ -48,16 +54,18 @@ class RunnableParallel(Runnable):
 
             if not isinstance(runnable, Runnable):
                 raise TypeError(
-                    f"{name} is not a Runnable."
+                    f"'{name}' is not a Runnable. "
+                    "Every branch passed to RunnableParallel must implement invoke()."
                 )
 
         self.runnables = runnables
 
-    def invoke(self, input_data):
+    def invoke(self, input_data, verbose=False):
 
-        print("=" * 60)
-        print("🚀 Runnable Parallel Started")
-        print("=" * 60)
+        if verbose:
+            print("=" * 60)
+            print("🚀 EduChain — Running branches in parallel")
+            print("=" * 60)
 
         results = {}
 
@@ -67,33 +75,29 @@ class RunnableParallel(Runnable):
 
             for name, runnable in self.runnables.items():
 
-                print(f"Submitting '{name}'...")
+                if verbose:
+                    print(f"→ Submitting '{name}'...")
 
                 futures[name] = executor.submit(
                     runnable.invoke,
                     input_data
                 )
 
-            print()
-
             for name, future in futures.items():
 
                 results[name] = future.result()
 
-                print(f"✅ {name} completed")
+                if verbose:
+                    print(f"✅ '{name}' completed")
 
-        print("\n" + "=" * 60)
-        print("Runnable Parallel Finished")
-        print("=" * 60)
+        if verbose:
+            print("=" * 60)
+            print("All branches finished\n")
 
-        print()
-
-        for name, output in results.items():
-
-            print(f"\n{name.upper()}")
-
-            print("-" * 40)
-
-            print(output)
+            for name, output in results.items():
+                print(f"{name.upper()}")
+                print("-" * 40)
+                print(output)
+                print()
 
         return results

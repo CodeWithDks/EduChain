@@ -1,7 +1,12 @@
 """
 prompt.py
+
+Author: Deepak Singh (github.com/CodeWithDks)
+Project: EduChain — a mini LangChain clone, built for learning
+
 Contains the PromptTemplate class.
 Its responsibility is simple:
+
 Dictionary
       ↓
 Formatted Prompt (string)
@@ -15,17 +20,19 @@ class PromptTemplate(Runnable):
 
         if not isinstance(template, str):
             raise TypeError(
-                "template must be a string."
+                "template must be a string. "
+                "Example: PromptTemplate('Hello {name}', ['name'])"
             )
 
         if not isinstance(input_variables, list):
             raise TypeError(
-                "input_variables must be a list."
+                "input_variables must be a list of variable names, e.g. ['name', 'topic']."
             )
 
         if len(input_variables) == 0:
             raise ValueError(
-                "input_variables cannot be empty."
+                "input_variables cannot be empty. "
+                "Add at least one variable that appears in your template."
             )
 
         self.template = template
@@ -35,11 +42,11 @@ class PromptTemplate(Runnable):
 
         if not isinstance(input_data, dict):
             raise TypeError(
-   
-                "Input must be a dictionary."
+                f"PromptTemplate expects a dict, but got {type(input_data).__name__}. "
+                "Pass values like {'name': 'Deepak'}."
             )
 
-        # Missing Variables 
+        # ---- Check for missing variables ----
         missing = []
 
         for variable in self.input_variables:
@@ -49,18 +56,18 @@ class PromptTemplate(Runnable):
 
         if missing:
             raise ValueError(
-                f"Missing variables: {missing}"
+                f"Missing variables: {missing}. "
+                f"This template needs: {self.input_variables}"
             )
 
-        # Extra Variables 
-
+        # ---- Check for extra/unexpected variables ----
         extra = set(input_data.keys()) - set(self.input_variables)
 
         if extra:
             raise ValueError(
-                f"Unexpected variables: {extra}"
+                f"Unexpected variables: {extra}. "
+                f"This template only accepts: {self.input_variables}"
             )
 
-        # Format Prompt
-
+        # ---- Format and return the final prompt string ----
         return self.template.format(**input_data)

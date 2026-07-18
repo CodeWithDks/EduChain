@@ -1,101 +1,62 @@
-# 🚀 MiniLangChain
+# 🚀 EduChain
 
-> **Learn LangChain by Building It Yourself**
+> **An educational Python framework inspired by LangChain for learning how modern LLM frameworks work internally.**
 
-MiniLangChain is a lightweight educational framework inspired by LangChain. The goal of this project is **not to replace LangChain**, but to understand **how LangChain works internally** by implementing its core building blocks from scratch.
+EduChain is a lightweight framework that recreates the core building blocks of LangChain from scratch. Instead of treating LLM frameworks as a black box, EduChain focuses on understanding the design patterns, abstractions, and architecture behind them.
 
-Instead of treating LangChain as a black box, this project recreates the most important abstractions such as **Runnable**, **PromptTemplate**, **ChatModel**, **OutputParser**, **RunnableSequence**, and **RunnableParallel** using clean and beginner-friendly Python code.
-
----
-
-# 📖 Why This Project?
-
-Many developers start using LangChain like this:
-
-```python
-prompt | model | parser
-```
-
-Everything works.
-
-But have you ever wondered...
-
-* How does `PromptTemplate` replace variables?
-* How does the `|` operator work?
-* Why does every component have an `invoke()` method?
-* How are multiple chains executed in parallel?
-* Why does LangChain use Runnables?
-
-Instead of reading thousands of lines of framework code, I decided to rebuild the core concepts myself.
-
-This repository is the result.
+> **Note:** EduChain is an educational project. It is **not** intended to replace LangChain or be feature-compatible with it.
 
 ---
 
-# 🎯 Goals
+## ✨ Features
 
-The primary goals of MiniLangChain are:
-
-* Learn object-oriented design
-* Understand framework architecture
-* Understand abstraction using Abstract Base Classes (ABC)
-* Learn operator overloading (`|`)
-* Understand prompt formatting
-* Build a simple LLM wrapper
-* Learn sequential execution
-* Learn parallel execution
-* Understand how LangChain pipelines work internally
-
----
-
-# ✨ Features
-
-* ✅ Custom Runnable abstraction
-* ✅ Prompt Template implementation
-* ✅ Chat Model wrapper
-* ✅ Output Parser
-* ✅ RunnableSequence
-* ✅ RunnableParallel
-* ✅ Input validation
-* ✅ Type checking
-* ✅ Modular architecture
-* ✅ Beginner-friendly implementation
+- ✅ Runnable abstraction
+- ✅ PromptTemplate
+- ✅ ChatModel wrapper
+- ✅ StringOutputParser
+- ✅ RunnableSequence
+- ✅ RunnableParallel
+- ✅ Operator overloading (`|`)
+- ✅ Input validation
+- ✅ Modular architecture
+- ✅ Beginner-friendly implementation
 
 ---
 
 # 📂 Project Structure
 
 ```
-mini_langchain/
-
+EduChain/
 │
-├── runnable.py
+├── educhain/
+│   ├── core/
+│   ├── prompts/
+│   ├── models/
+│   ├── output_parsers/
+│   └── __init__.py
 │
-├── prompt.py
+├── examples/
 │
-├── llm.py
+├── tests/
 │
-├── parser.py
+├── docs/
 │
-├── sequence.py
-│
-├── parallel.py
-│
-└── main.py
+├── README.md
+├── requirements.txt
+└── LICENSE
 ```
 
 ---
 
-# 🏗 Architecture
+# 🏛 Architecture
 
 ```
-                  Runnable (Abstract Base Class)
-                           │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-        ▼                  ▼                  ▼
- PromptTemplate      ChatModel         OutputParser
-        │
+                    Runnable
+                        │
+        ┌───────────────┼───────────────┐
+        │               │               │
+        ▼               ▼               ▼
+ PromptTemplate     ChatModel     OutputParser
         │
         ▼
  RunnableSequence
@@ -104,65 +65,94 @@ mini_langchain/
  RunnableParallel
 ```
 
-Everything in MiniLangChain is a **Runnable**.
-
-Every Runnable exposes one common interface:
+Every component in EduChain follows a single interface:
 
 ```python
 invoke(input)
 ```
 
-Because every component behaves the same way, they can easily be combined together.
+Because every component behaves consistently, they can be composed into flexible execution pipelines.
 
 ---
 
-# 🧩 Core Components
+# ⚡ Installation
 
-## 1. Runnable
+Clone the repository
 
-`Runnable` is the foundation of the entire framework.
+```bash
+git clone https://github.com/yourusername/EduChain.git
+```
 
-It is an Abstract Base Class (ABC).
+Move into the project
 
-Every component inherits from it.
+```bash
+cd EduChain
+```
 
-Responsibilities:
+Create a virtual environment
 
-* Define the common interface
-* Force child classes to implement `invoke()`
-* Support chaining using the `|` operator
+```bash
+python -m venv venv
+```
 
-Example:
+Activate it
 
-```python
-class Runnable(ABC):
+### Windows
 
-    @abstractmethod
-    def invoke(self, input):
-        pass
+```bash
+venv\Scripts\activate
+```
+
+### Linux / macOS
+
+```bash
+source venv/bin/activate
+```
+
+Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+Create a `.env` file
+
+```env
+OPENAI_API_KEY=your_api_key_here
 ```
 
 ---
 
-## 2. PromptTemplate
-
-Responsibility:
-
-Convert
+# 🚀 Quick Start
 
 ```python
-{
+from educhain import (
+    PromptTemplate,
+    ChatModel,
+    StringOutputParser,
+)
+
+prompt = PromptTemplate(
+    template="Explain {topic} in simple words.",
+    input_variables=["topic"]
+)
+
+model = ChatModel()
+
+parser = StringOutputParser()
+
+chain = prompt | model | parser
+
+response = chain.invoke({
     "topic": "Artificial Intelligence"
-}
+})
+
+print(response)
 ```
 
-into
+---
 
-```text
-Explain Artificial Intelligence.
-```
-
-Flow:
+# 🔄 Execution Flow
 
 ```
 Dictionary
@@ -172,130 +162,88 @@ PromptTemplate
       │
       ▼
 Formatted Prompt
-```
-
----
-
-## 3. ChatModel
-
-The ChatModel is a thin wrapper around an LLM.
-
-Responsibilities:
-
-* Validate prompt
-* Call the language model
-* Return AIMessage
-
-Flow:
-
-```
-Prompt
-   │
-   ▼
+      │
+      ▼
 ChatModel
-   │
-   ▼
+      │
+      ▼
 AIMessage
-```
-
----
-
-## 4. OutputParser
-
-Large Language Models usually return structured objects.
-
-For example:
-
-```
-AIMessage
-├── content
-├── metadata
-├── usage
-└── id
-```
-
-Most applications only need
-
-```
-content
-```
-
-The OutputParser extracts the useful information.
-
-Flow:
-
-```
-AIMessage
-     │
-     ▼
+      │
+      ▼
 OutputParser
-     │
-     ▼
-String
-```
-
----
-
-## 5. RunnableSequence
-
-RunnableSequence executes multiple Runnables one after another.
-
-Example:
-
-```
-Dictionary
-     │
-     ▼
-PromptTemplate
-     │
-     ▼
-ChatModel
-     │
-     ▼
-OutputParser
-     │
-     ▼
+      │
+      ▼
 Final Response
 ```
 
-Instead of manually calling every component:
+---
+
+# 🧩 Core Components
+
+## Runnable
+
+The base abstraction of EduChain.
+
+Every component inherits from `Runnable` and implements a common `invoke()` interface.
+
+---
+
+## PromptTemplate
+
+Formats prompts by replacing template variables with user input.
+
+Example:
 
 ```python
-formatted = prompt.invoke(data)
-response = model.invoke(formatted)
-answer = parser.invoke(response)
-```
-
-you simply write:
-
-```python
-chain = prompt | model | parser
-
-response = chain.invoke(data)
+PromptTemplate(
+    template="Explain {topic}.",
+    input_variables=["topic"]
+)
 ```
 
 ---
 
-## 6. RunnableParallel
+## ChatModel
 
-RunnableParallel executes multiple Runnables simultaneously.
+A lightweight wrapper around an LLM that receives a prompt and returns an AI response.
 
-Example:
+---
 
+## OutputParser
+
+Transforms raw model outputs into clean Python objects.
+
+Current implementation:
+
+- StringOutputParser
+
+---
+
+## RunnableSequence
+
+Executes multiple runnables sequentially.
+
+```python
+chain = prompt | model | parser
 ```
-                 Input
-                   │
-      ┌────────────┼────────────┐
-      ▼            ▼            ▼
- Summary       Joke       Interview
-   Chain        Chain        Chain
-      │            │            │
-      └────────────┼────────────┘
-                   ▼
-            Combined Results
+
+instead of
+
+```python
+response = parser.invoke(
+    model.invoke(
+        prompt.invoke(data)
+    )
+)
 ```
 
-Output:
+---
+
+## RunnableParallel
+
+Executes multiple independent chains concurrently using Python's `ThreadPoolExecutor`.
+
+Example output:
 
 ```python
 {
@@ -307,177 +255,118 @@ Output:
 
 ---
 
-# 🔥 Execution Flow
+# 📚 Examples
+
+Example scripts are available inside the `examples/` directory.
 
 ```
-User Input
-      │
-      ▼
-PromptTemplate
-      │
-      ▼
-Formatted Prompt
-      │
-      ▼
-ChatModel
-      │
-      ▼
-AIMessage
-      │
-      ▼
-OutputParser
-      │
-      ▼
-Final Response
+examples/
+│
+├── chatbot.py
+├── sequence_demo.py
+└── parallel_demo.py
+```
+
+Run an example:
+
+```bash
+python -m examples.sequence_demo
 ```
 
 ---
 
-# 🚀 Example
+# 🧪 Tests
 
-```python
-from prompt import PromptTemplate
-from llm import ChatModel
-from parser import StringOutputParser
+Run all tests
 
-prompt = PromptTemplate(
-    template="Explain {topic} in {language}.",
-    input_variables=["topic", "language"]
-)
-
-llm = ChatModel()
-
-parser = StringOutputParser()
-
-chain = prompt | llm | parser
-
-response = chain.invoke({
-    "topic": "Artificial Intelligence",
-    "language": "English"
-})
-
-print(response)
-```
-
-Output
-
-```
-Artificial Intelligence (AI) is a branch of computer science that focuses on building systems capable of performing tasks that normally require human intelligence.
+```bash
+python -m pytest
 ```
 
 ---
 
-# 🛡 Input Validation
+# 🎯 Learning Objectives
 
-MiniLangChain performs validation before execution.
+EduChain was built to understand the engineering principles behind modern LLM frameworks.
 
-Examples:
+Topics covered include:
 
-Missing Variables
-
-```python
-prompt.invoke({})
-```
-
-Raises
-
-```
-ValueError
-```
-
-Wrong Input Type
-
-```python
-prompt.invoke([])
-```
-
-Raises
-
-```
-TypeError
-```
-
-Unexpected Variables
-
-```python
-{
-    "topic":"AI",
-    "age":20
-}
-```
-
-Raises
-
-```
-ValueError
-```
+- Object-Oriented Programming
+- Abstract Base Classes
+- Operator Overloading
+- Method Chaining
+- Software Architecture
+- Dependency Injection
+- ThreadPoolExecutor
+- Prompt Engineering
+- Sequential Pipelines
+- Parallel Pipelines
 
 ---
 
-# 📚 What I Learned
+# 🛣 Roadmap
 
-While building this project I learned:
+## Core
 
-* Abstract Base Classes
-* Object-Oriented Design
-* Framework Design
-* Dependency Injection
-* Operator Overloading
-* Method Chaining
-* ThreadPoolExecutor
-* Sequential Pipelines
-* Parallel Pipelines
-* Prompt Engineering
-* LLM Wrappers
-* Software Architecture
+- [x] Runnable
+- [x] PromptTemplate
+- [x] ChatModel
+- [x] OutputParser
+- [x] RunnableSequence
+- [x] RunnableParallel
+
+## Planned Features
+
+- [ ] Chat History
+- [ ] Memory
+- [ ] Streaming
+- [ ] Batch Processing
+- [ ] Callback System
+- [ ] Tool Calling
+- [ ] Agents
+- [ ] Retriever
+- [ ] Vector Store
+- [ ] RAG
+- [ ] Async Support
 
 ---
 
-# 🚧 Roadmap
+# 📖 Documentation
 
-Future improvements:
+Additional documentation is available in the `docs/` directory.
 
-* [ ] Chat History
-* [ ] Memory
-* [ ] Streaming Responses
-* [ ] Batch Processing
-* [ ] Retry Logic
-* [ ] Callback Manager
-* [ ] Logging System
-* [ ] Tool Calling
-* [ ] Agents
-* [ ] Retrieval
-* [ ] Vector Database Integration
-* [ ] RAG Pipeline
+- Development Notes
+- Design Decisions
+- Architecture
 
 ---
 
 # 🤝 Contributing
 
-Contributions, improvements, bug reports, and suggestions are always welcome.
+Contributions, suggestions, and improvements are welcome.
 
-If you'd like to improve MiniLangChain, feel free to fork the repository and submit a Pull Request.
-
----
-
-# 📜 License
-
-This project is released under the MIT License.
+If you find a bug or have an idea for improving EduChain, feel free to open an issue or submit a pull request.
 
 ---
 
-# ⭐ Acknowledgements
+# 📄 License
 
-This project is inspired by the design principles of the LangChain framework.
-
-It is an educational reimplementation created to understand the internal architecture and concepts behind LangChain. It is **not affiliated with or a replacement for LangChain**.
+This project is licensed under the MIT License.
 
 ---
+
+# 🙏 Acknowledgements
+
+EduChain is inspired by the architecture and design principles of LangChain.
+
+This project is an educational reimplementation created to better understand how modern LLM frameworks are designed. It is not affiliated with or endorsed by the LangChain project.
+
+---
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 
 # 👨‍💻 Author
 
-**Deepak Singh**
+**Deepak Kumar Singh**
 
 If you found this project helpful, consider giving it a ⭐ on GitHub.
-
-Happy Learning! 🚀

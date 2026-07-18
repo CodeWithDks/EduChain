@@ -1,6 +1,9 @@
 """
 llm.py
 
+Author: Deepak Singh (github.com/CodeWithDks)
+Project: EduChain — a mini LangChain clone, built for learning
+
 This file contains the ChatModel class.
 
 Responsibility:
@@ -24,34 +27,42 @@ class ChatModel(Runnable):
 
     Any chat model that supports .invoke()
     can be passed here.
-    
-    I am using ChatOpenAI() as the default model.
-    Just for testing purpose.
+
+    I am using ChatOpenAI() as the default model,
+    just for testing purpose. You can swap it with
+    any other chat model later.
     """
 
-    def __init__(self, model=None):
+    def __init__(self, model=None, max_tokens=None):
 
+        # if user didn't pass a model, fall back to default ChatOpenAI
+        # max_tokens only applies here — if a custom model is passed in,
+        # it's assumed to already be configured the way the user wants
         if model is None:
-            model = ChatOpenAI()
+            model = ChatOpenAI(max_tokens=max_tokens)
 
         self.model = model
+        self.max_tokens = max_tokens
 
     def invoke(self, input_data):
 
-        # Validation
+        # ---- Validation ----
+        # ChatModel only accepts plain string prompts.
+        # This usually comes from PromptTemplate.format()
 
         if not isinstance(input_data, str):
             raise TypeError(
-                "ChatModel expects a string prompt."
+                f"ChatModel expects a string prompt, but got {type(input_data).__name__}. "
+                "Did you forget to call .format() on your PromptTemplate?"
             )
 
         if input_data.strip() == "":
             raise ValueError(
-                "Prompt cannot be empty."
+                "Prompt cannot be empty. Please pass some text before calling invoke()."
             )
-        # Send prompt to model
 
+        # ---- Send prompt to model ----
         response = self.model.invoke(input_data)
 
-        # AIMessage object
+        # returns an AIMessage object (has .content, .response_metadata etc.)
         return response
