@@ -1,9 +1,6 @@
 """
 llm.py
 
-Author: Deepak Singh (github.com/CodeWithDks)
-Project: EduChain — a mini LangChain clone, built for learning
-
 This file contains the ChatModel class.
 
 Responsibility:

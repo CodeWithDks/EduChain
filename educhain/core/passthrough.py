@@ -1,9 +1,6 @@
 """
 passthrough.py
 
-Author: Deepak Singh (github.com/CodeWithDks)
-Project: EduChain — a mini LangChain clone, built for learning
-
 Contains the RunnablePassthrough class.
 
 Responsibility:

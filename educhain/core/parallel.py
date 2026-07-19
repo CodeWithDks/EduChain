@@ -1,20 +1,16 @@
 """
 parallel.py
-
-Author: Deepak Singh (github.com/CodeWithDks)
-Project: EduChain — a mini LangChain clone, built for learning
-
 Runs multiple Runnable objects in parallel.
 
 Example:
 
 Input
   │
-  ├────────► Summary Chain
+  ├──────── Summary Chain
   │
-  ├────────► Joke Chain
+  ├──────── Joke Chain
   │
-  └────────► Interview Chain
+  └──────── Interview Chain
 
 Returns:
 
@@ -64,7 +60,7 @@ class RunnableParallel(Runnable):
 
         if verbose:
             print("=" * 60)
-            print("🚀 EduChain — Running branches in parallel")
+            print(" EduChain — Running branches in parallel")
             print("=" * 60)
 
         results = {}
@@ -88,7 +84,7 @@ class RunnableParallel(Runnable):
                 results[name] = future.result()
 
                 if verbose:
-                    print(f"✅ '{name}' completed")
+                    print(f" '{name}' completed")
 
         if verbose:
             print("=" * 60)

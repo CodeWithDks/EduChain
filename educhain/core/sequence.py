@@ -1,8 +1,6 @@
 """
 sequence.py
 
-Author: Deepak Singh (github.com/CodeWithDks)
-Project: EduChain — a mini LangChain clone, built for learning
 
 Contains the RunnableSequence class.
 
@@ -12,17 +10,17 @@ one after another.
 Example:
 
 dict
- ↓
+ |
 PromptTemplate
- ↓
+ |
 string
- ↓
+ |
 ChatModel
- ↓
+ |
 AIMessage
- ↓
+ |
 OutputParser
- ↓
+ |
 string
 """
 
@@ -61,7 +59,7 @@ class RunnableSequence(Runnable):
 
         if self.verbose:
             print("=" * 60)
-            print("✨ EduChain — built by Deepak Singh")
+            print("EduChain — built by Deepak Singh")
             print("=" * 60)
 
         result = input_data

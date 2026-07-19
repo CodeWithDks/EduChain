@@ -1,4 +1,4 @@
-from educhain.prompt import PromptTemplate
+from educhain.prompts import PromptTemplate
 
 prompt = PromptTemplate(
     template="You are a helpful assistant. answer only from then text:\n {text}",

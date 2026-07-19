@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 
 from educhain.models import ChatModel
-from educhain.prompt import PromptTemplate
+from educhain.prompts import PromptTemplate
 from educhain.output_parsers import StringOutputParser
 from educhain.core import RunnableParallel
 
