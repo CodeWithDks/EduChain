@@ -1,6 +1,9 @@
 """
 parser.py
 
+Author: Deepak Singh (github.com/CodeWithDks)
+Project: EduChain — a mini LangChain clone, built for learning
+
 Contains OutputParser classes.
 
 Responsibility:
@@ -32,6 +35,12 @@ class StringOutputParser(OutputParser):
     Simplest parser, just pulls out the .content
     """
 
+    # tells RunnableSequence.stream() that this step consumes a
+    # generator of chunks rather than being a streaming source itself —
+    # without this flag, RunnableSequence assumes THIS parser is the
+    # source and tries to call model logic on it, which breaks
+    IS_STREAM_TRANSFORMER = True
+
     def invoke(self, input_data):
 
         if not isinstance(input_data, AIMessage):
@@ -42,14 +51,33 @@ class StringOutputParser(OutputParser):
 
         return input_data.content
 
+    def stream(self, input_data):
+        """
+        input_data here is a generator of AIMessageChunks coming from
+        ChatModel.stream() (or another transformer before this one).
+        Yields just the text content of each chunk.
+        """
+
+        for chunk in input_data:
+
+            if not hasattr(chunk, "content"):
+                raise TypeError(
+                    "StringOutputParser.stream() expected chunks with a "
+                    "'.content' attribute. Are you streaming from a ChatModel?"
+                )
+
+            yield chunk.content
+
 
 class JsonOutputParser(OutputParser):
     """
-    Converts JSON string (from AIMessage.content)
-    into a Python dictionary.
+    Converts JSON string
+    into Python dictionary.
 
-    Useful when the prompt asks the LLM to
-    respond strictly in JSON format.
+    Note: intentionally does NOT support streaming (no IS_STREAM_TRANSFORMER
+    flag, no stream() override). Partial JSON can't be reliably parsed
+    chunk-by-chunk, so this parser stays invoke-only. Use StringOutputParser
+    if you need streaming.
     """
 
     import json
