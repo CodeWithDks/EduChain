@@ -34,7 +34,6 @@ class Runnable(ABC):
     def invoke(self, input_data):
         """
         Execute the runnable.
-
         Every child class defines its own version of this —
         PromptTemplate formats a dict into a string,
         ChatModel sends a string to the LLM,
@@ -42,20 +41,61 @@ class Runnable(ABC):
         """
         pass
 
+
+    def stream(self, input_data):
+        """
+        Default streaming behavior.
+
+        Not every component can actually stream (e.g. PromptTemplate
+        just formats a string instantly), so by default this just
+        runs invoke() and yields the whole result as one chunk.
+
+        Components that support real streaming (like ChatModel)
+        override this method.
+        """
+        yield self.invoke(input_data)
+
+    async def ainvoke(self, input_data):
+        """
+        Default async behavior — just runs invoke() normally.
+        Components that do real async work (like ChatModel,
+        which hits a network API) override this properly.
+        """
+        return self.invoke(input_data)
+
+    def _fire(self, hook_name, *args):
+        """
+        Safely calls a callback hook on every registered handler,
+        if this Runnable has any. Steps that don't support callbacks
+        (like PromptTemplate) just won't have self.callbacks set,
+        so this quietly does nothing for them.
+        """
+        callbacks = getattr(self, "callbacks", None)
+        if not callbacks:
+            return
+
+        for handler in callbacks:
+            method = getattr(handler, hook_name, None)
+            if method:
+                method(*args)
+        
+
     def __or__(self, other):
         """
         Enables the pipe syntax:
 
             runnable1 | runnable2
-
         Under the hood this just wraps both runnables
         into a RunnableSequence, so calling .invoke() on
         the result runs them one after another, passing
         the output of one as the input to the next.
         """
-
         # imported here (not at the top) to avoid a circular import,
         # since sequence.py also imports from this file
         from educhain.core.sequence import RunnableSequence
 
         return RunnableSequence(self, other)
+    
+
+
+
