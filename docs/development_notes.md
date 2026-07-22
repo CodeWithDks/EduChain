@@ -498,14 +498,14 @@ Because every component follows the same interface, they can be composed into la
 - [x] OutputParser
 - [x] RunnableSequence
 - [x] RunnableParallel
+- [x] Chat History
+- [x] Memory
 
 ---
 
 ## Next Components
 
 - [ ] Console Logger
-- [ ] Chat History
-- [ ] Memory
 - [ ] Streaming
 - [ ] Batch Processing
 - [ ] Callback Manager

@@ -7,14 +7,12 @@ from educhain.core import RunnableParallel
 
 load_dotenv()
 
-
 # -------------------------------------------------------
 # Shared Components
 # -------------------------------------------------------
 
 llm = ChatModel()
 parser = StringOutputParser()
-
 
 # -------------------------------------------------------
 # Chain 1 : Market Analysis

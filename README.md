@@ -1,4 +1,7 @@
 # 🚀 EduChain
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
 > **An educational Python framework inspired by LangChain for learning how modern LLM frameworks work internally.**
 
@@ -10,17 +13,19 @@ EduChain is a lightweight framework that recreates the core building blocks of L
 
 ## ✨ Features
 
-- ✅ Runnable abstraction
-- ✅ PromptTemplate
-- ✅ ChatModel wrapper
-- ✅ StringOutputParser
+- ✅ Runnable Abstraction
+- ✅ Prompt Templates
+- ✅ Chat Model Wrapper
+- ✅ Output Parsers
 - ✅ RunnableSequence
 - ✅ RunnableParallel
-- ✅ Operator overloading (`|`)
-- ✅ Input validation
-- ✅ Modular architecture
-- ✅ Beginner-friendly implementation
-
+- ✅ RunnablePassthrough
+- ✅ Chat History
+- ✅ Memory Module
+- ✅ Operator Overloading (`|`)
+- ✅ Input Validation
+- ✅ Modular Package Design
+- 🚧 More components coming soon
 ---
 
 # 📂 Project Structure
@@ -50,20 +55,20 @@ EduChain/
 
 # 🏛 Architecture
 
-```
-                    Runnable
-                        │
-        ┌───────────────┼───────────────┐
-        │               │               │
-        ▼               ▼               ▼
- PromptTemplate     ChatModel     OutputParser
+                              Runnable
+                                  │
+        ┌───────────────┬─────────┴───────────┬───────────────┐
+        ▼               ▼                     ▼               ▼
+ PromptTemplate     ChatModel         OutputParser     RunnablePassthrough
         │
         ▼
  RunnableSequence
         │
         ▼
  RunnableParallel
-```
+        │
+        ▼
+ Memory & Chat History
 
 Every component in EduChain follows a single interface:
 
@@ -304,9 +309,9 @@ Topics covered include:
 
 ---
 
-# 🛣 Roadmap
+## 🛣 Roadmap
 
-## Core
+### Completed
 
 - [x] Runnable
 - [x] PromptTemplate
@@ -314,22 +319,21 @@ Topics covered include:
 - [x] OutputParser
 - [x] RunnableSequence
 - [x] RunnableParallel
+- [x] RunnablePassthrough
+- [x] Chat History
+- [x] Memory
 
-## Planned Features
+### Planned
 
-- [ ] Chat History
-- [ ] Memory
 - [ ] Streaming
+- [ ] Callback Manager
 - [ ] Batch Processing
-- [ ] Callback System
+- [ ] Async Support
 - [ ] Tool Calling
 - [ ] Agents
 - [ ] Retriever
 - [ ] Vector Store
-- [ ] RAG
-- [ ] Async Support
-
----
+- [ ] RAG Pipeline
 
 # 📖 Documentation
 
@@ -362,8 +366,6 @@ EduChain is inspired by the architecture and design principles of LangChain.
 This project is an educational reimplementation created to better understand how modern LLM frameworks are designed. It is not affiliated with or endorsed by the LangChain project.
 
 ---
-![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 
 # 👨‍💻 Author
 
