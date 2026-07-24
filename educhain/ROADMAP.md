@@ -8,7 +8,7 @@ so every session starts with focus instead of re-deciding priorities.
 
 ---
 
-## ✅ Completed & Verified (20/20 tests passing)
+## ✅ Completed & Verified (26/26 tests passing)
 
 ### Core Primitives
 - `Runnable` — base class, every component implements `.invoke()`
@@ -22,7 +22,9 @@ so every session starts with focus instead of re-deciding priorities.
 - `RunnableLambda` — wraps any plain Python function as a chain step
 
 ### Memory
-- `ChatMessageHistory` — remembers conversation turns across multiple `.invoke()` calls
+- `MessageHistory` (`core/history.py`) — raw message store (list + add/clear)
+- `ChatMessageHistory` (`memory/chat_history.py`) — wraps a chain, auto-injects
+  history into prompts, auto-saves turns
 
 ### Streaming
 - `ChatModel.stream()` — token-by-token output from the LLM
@@ -44,49 +46,81 @@ so every session starts with focus instead of re-deciding priorities.
 - Custom handlers proven working (e.g. step timing/counting) with zero changes
   to core chain code
 
+### Tool Calling
+- `educhain/core/tool.py` — `Tool` class, auto-generates JSON schema from
+  function type hints + docstring (no hand-written schemas required)
+- `ChatModel` accepts `tools=[...]`, binds via `.bind_tools(schemas, tool_choice="auto")`
+- `ChatModel.has_tool_calls()` — detects tool-call vs. plain-text responses
+- `ChatModel.run_tool_calls()` — executes the LLM's chosen tool(s), returns
+  structured results
+- Known limitation: `ChatModel.invoke()` only accepts single string prompts,
+  not full message-list conversations — full tool round-trips currently
+  require reaching into the raw underlying model directly (see demo_tools.py
+  demo 4). **Deferred on purpose — this is genuinely an Agent-phase problem,
+  to be solved when Agents give it a concrete use case, not speculatively now.**
+
+### Vector Stores
+- `educhain/core/vectorstore.py` — `InMemoryVectorStore` class
+- Uses `OpenAIEmbeddings` for text → vector conversion (not reimplemented —
+  same reasoning as using LangChain's `.bind_tools()` for Tool Calling)
+- Hand-written cosine similarity search (the actual "search" mechanism —
+  this part IS built from scratch, on purpose)
+- `add_texts()` — batch-embeds and stores text chunks
+- `similarity_search(query, k=3)` — returns top-k most relevant chunks with scores
+- Verified: correctly retrieves semantically relevant text even when the query
+  shares no exact keywords with the source text (proven in demo_vectorstore.py
+  demo 2 — "What framework is Deepak building?" correctly surfaced EduChain-
+  related facts over a more keyword-obvious "Python" fact)
+
 ### Test Coverage
-- `test_all_features.py` — 20 tests, covers happy paths + validation errors
+- `test_all_features.py` — 26 tests, covers happy paths + validation errors
   for every primitive above
 - `demo_all_features.py` — real usage demo, all features working together
 - `demo_async.py` — async chains + speed comparison
 - `demo_callbacks.py` — built-in + custom handlers, multi-handler, error hooks
+- `demo_tools.py` — tool detection, execution, multi-tool selection, full
+  round-trip, validation
+- `demo_vectorstore.py` — semantic search across mixed topics, validation
 
 ---
 
 ## 🚧 In Progress / Next Up
 
-### 1. Tool Calling — *next session*
-- `educhain/core/tool.py` — `Tool` class wrapping a plain Python function
-  (auto-generate schema from type hints + docstring, no hand-written JSON schema)
-- `ChatModel` gains `tools=[...]` support via `.bind_tools()`
-- Detect tool-call responses vs. plain text responses
-- Execute the chosen tool, feed result back into the conversation
+### 1. RAG (Retrieval-Augmented Generation) — *next session*
+- New file: `educhain/core/rag.py` — `RAGChain` class
+- Decision made: `RAGChain` will inherit from `Runnable` (fits the single
+  input → single output contract cleanly, unlike `Tool` which genuinely
+  doesn't fit that shape)
+- Core pattern: `similarity_search()` → inject results into `PromptTemplate`
+  as context → run through existing `prompt | model | parser` chain
+- Key realization to land on: RAG isn't a new primitive, it's a *pattern*
+  built entirely from pieces we already have (Vector Store + PromptTemplate
+  + RunnableSequence)
 
-### 2. Vector Stores
-- Basic in-memory store: list of embeddings + cosine similarity search
-- Understand the mechanism before reaching for FAISS/Chroma
-
-### 3. RAG (Retrieval-Augmented Generation)
-- Combine Vector Store retrieval + existing `PromptTemplate` + chain
-- Realization goal: RAG isn't a new primitive, it's a *pattern* built from
-  what we already have
-
-### 4. Agents
+### 2. Agents
 - The capstone — built entirely from Tool Calling + Callbacks + a loop
 - LLM decides action → action executes → result feeds back → repeat until done
-- This is *why* Tool Calling and Callbacks had to come before this
+- Must solve the message-list conversation gap in `ChatModel` here (deferred
+  from Tool Calling phase, see note above)
+- Once RAG exists, retrieval can be wrapped as a Tool — giving the Agent a
+  genuinely useful capability (search a real knowledge base) instead of only
+  toy demo functions
 
 ---
 
-## 📌 Known Cleanup Items (not blocking, but don't forget)
+## 📌 Known Cleanup Items
 
-- [ ] Check if `educhain/core/history.py` is a leftover duplicate of
-      `educhain/memory/chat_history.py` — confirm and remove if unused
+- [x] ~~Check if `core/history.py` duplicates `memory/chat_history.py`~~ —
+      **Resolved: not a duplicate.** Correct separation — `core/history.py`
+      is the raw data store, `memory/chat_history.py` is the chain-integration
+      wrapper that depends on it. Keep both as-is.
 - [ ] `ChatModel` doesn't currently accept `callbacks=[...]` — decide if this
       is worth adding for error visibility at the model level, or if
       sequence-level callbacks are enough
 - [ ] Consider adding `ainvoke()` to `RunnableLambda` and `RunnablePassthrough`
       explicitly, instead of relying on the base class fallback
+- [ ] `ChatModel.invoke()` message-list support — deferred to Agent phase
+      (see Tool Calling section above)
 
 ---
 
@@ -99,4 +133,4 @@ things twice. This order is deliberate, not arbitrary.
 
 ---
 
-*Last updated: after completing Callback System, all 20 tests passing.*
+*Last updated: after completing Vector Stores, all 26 tests passing.*
