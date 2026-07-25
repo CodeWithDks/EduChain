@@ -19,6 +19,8 @@ from educhain.core.parallel import RunnableParallel
 from educhain.core.passthrough import RunnablePassthrough
 from educhain.core.lambda_runnable import RunnableLambda
 from educhain.core.tool import Tool
+from educhain.core.vectorstore import InMemoryVectorStore
+from educhain.core.rag import RAGChain
 
 load_dotenv()
 
@@ -623,6 +625,154 @@ def test_chatmodel_unknown_tool_error():
         print("❌ FAILED: should have raised ValueError")
     except ValueError as e:
         print(f"✅ Correctly raised ValueError: {e}")
+
+# ---------------------------------------------------------------
+# 27. RAGChain — end-to-end retrieval + generation
+# ---------------------------------------------------------------
+def test_rag_basic():
+    section("TEST 27: RAGChain.invoke() — answers using retrieved context")
+
+    store = InMemoryVectorStore()
+    store.add_texts([
+        "NimbusTech was founded in 2021 by Ariana Kessler in Pune, India.",
+        "NimbusTech's headquarters moved from Pune to Bangalore in 2023.",
+        "NimbusTech's flagship product is CloudSprint, a deployment tool.",
+    ])
+
+    model = ChatModel()
+    parser = StringOutputParser()
+    prompt = PromptTemplate(
+        template=(
+            "Answer using ONLY the context below. "
+            "If the answer isn't in the context, say you don't know.\n\n"
+            "Context:\n{context}\n\nQuestion: {question}\nAnswer:"
+        ),
+        input_variables=["context", "question"],
+    )
+
+    chain = prompt | model | parser
+    rag = RAGChain(vectorstore=store, chain=chain, k=3)
+
+    answer = rag.invoke("Where is NimbusTech based now?")
+    print("Answer:", answer)
+
+    assert isinstance(answer, str)
+    assert "bangalore" in answer.lower(), \
+        "Answer should mention Bangalore — this is fictional data, so a correct answer proves retrieval worked"
+    print("✅ PASSED")
+
+
+# ---------------------------------------------------------------
+# 28. RAGChain — refuses to answer when info isn't in context
+# ---------------------------------------------------------------
+def test_rag_out_of_context():
+    section("TEST 28: RAGChain — admits it doesn't know when context lacks the answer")
+
+    store = InMemoryVectorStore()
+    store.add_texts([
+        "NimbusTech was founded in 2021 by Ariana Kessler in Pune, India.",
+    ])
+
+    model = ChatModel()
+    parser = StringOutputParser()
+    prompt = PromptTemplate(
+        template=(
+            "Answer using ONLY the context below. "
+            "If the answer isn't in the context, say you don't know.\n\n"
+            "Context:\n{context}\n\nQuestion: {question}\nAnswer:"
+        ),
+        input_variables=["context", "question"],
+    )
+
+    chain = prompt | model | parser
+    rag = RAGChain(vectorstore=store, chain=chain, k=3)
+
+    answer = rag.invoke("What is NimbusTech's annual revenue?")
+    print("Answer:", answer)
+
+    assert isinstance(answer, str)
+    assert len(answer) > 0
+    print("✅ PASSED (check manually — should decline to answer, not invent a number)")
+
+
+# ---------------------------------------------------------------
+# 29. RAGChain.get_relevant_chunks() — inspect retrieval separately
+# ---------------------------------------------------------------
+def test_rag_get_relevant_chunks():
+    section("TEST 29: RAGChain.get_relevant_chunks() — retrieval without generation")
+
+    store = InMemoryVectorStore()
+    store.add_texts([
+        "CloudSprint supports deployments to AWS, Azure, and Google Cloud.",
+        "The Eiffel Tower is located in Paris, France.",
+        "Mount Everest is the tallest mountain on Earth.",
+    ])
+
+    model = ChatModel()
+    parser = StringOutputParser()
+    prompt = PromptTemplate(
+        template="Context:\n{context}\n\nQuestion: {question}\nAnswer:",
+        input_variables=["context", "question"],
+    )
+
+    chain = prompt | model | parser
+    rag = RAGChain(vectorstore=store, chain=chain, k=2)
+
+    chunks = rag.get_relevant_chunks("What cloud platforms does CloudSprint support?")
+    print("Retrieved chunks:", chunks)
+
+    assert isinstance(chunks, list)
+    assert len(chunks) == 2
+    top_text, top_score = chunks[0]
+    assert "cloud" in top_text.lower() or "aws" in top_text.lower()
+    print("✅ PASSED")
+
+
+# ---------------------------------------------------------------
+# 30. RAGChain — validation errors
+# ---------------------------------------------------------------
+def test_rag_validation():
+    section("TEST 30: RAGChain validation")
+
+    store = InMemoryVectorStore()
+    store.add_texts(["A valid fact to search against."])
+
+    model = ChatModel()
+    parser = StringOutputParser()
+    prompt = PromptTemplate(
+        template="{context}\n{question}",
+        input_variables=["context", "question"],
+    )
+    chain = prompt | model | parser
+
+    # bad chain type
+    try:
+        RAGChain(vectorstore=store, chain="not a runnable")
+        print("❌ FAILED: should have raised TypeError")
+    except TypeError as e:
+        print(f"✅ Correctly raised TypeError: {e}")
+
+    # bad vectorstore type (missing similarity_search)
+    try:
+        RAGChain(vectorstore="not a vectorstore", chain=chain)
+        print("❌ FAILED: should have raised TypeError")
+    except TypeError as e:
+        print(f"✅ Correctly raised TypeError: {e}")
+
+    # empty question
+    rag = RAGChain(vectorstore=store, chain=chain)
+    try:
+        rag.invoke("")
+        print("❌ FAILED: should have raised ValueError")
+    except ValueError as e:
+        print(f"✅ Correctly raised ValueError: {e}")
+
+    # non-string question
+    try:
+        rag.invoke(123)
+        print("❌ FAILED: should have raised TypeError")
+    except TypeError as e:
+        print(f"✅ Correctly raised TypeError: {e}")
 # ---------------------------------------------------------------
 # NOT YET TESTED — code not shared with me yet
 # ---------------------------------------------------------------
@@ -660,6 +810,10 @@ if __name__ == "__main__":
         test_chatmodel_ignores_irrelevant_tool,
         test_chatmodel_calls_relevant_tool,
         test_chatmodel_unknown_tool_error,
+        test_rag_basic,
+        test_rag_out_of_context,
+        test_rag_get_relevant_chunks,
+        test_rag_validation,
     ]
 
     passed, failed = 0, 0

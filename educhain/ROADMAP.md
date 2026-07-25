@@ -72,8 +72,26 @@ so every session starts with focus instead of re-deciding priorities.
   demo 2 — "What framework is Deepak building?" correctly surfaced EduChain-
   related facts over a more keyword-obvious "Python" fact)
 
+  ### RAG (Retrieval-Augmented Generation)
+- `educhain/core/rag.py` — `RAGChain` class, inherits from `Runnable`
+- Wraps a vector store + an existing chain (`prompt | model | parser`)
+- `invoke(question)` — retrieves relevant chunks, injects as `context`,
+  runs the wrapped chain
+- `get_relevant_chunks(question)` — inspect retrieval separately from generation
+- Duck-typed vector store check (`hasattr(vectorstore, "similarity_search")`)
+  instead of `isinstance`, so any compatible store works, not just
+  `InMemoryVectorStore` specifically
+- Verified with fictional data (a made-up company) specifically so correct
+  answers are undeniable proof of retrieval working — not coincidence from
+  the LLM's own training knowledge
+- Confirmed: correctly declines to answer when the information isn't in
+  the retrieved context, instead of hallucinating
+- Key realization confirmed in practice: RAG is not a new primitive, it's
+  a *pattern* assembled entirely from existing pieces (VectorStore +
+  PromptTemplate + RunnableSequence)
+
 ### Test Coverage
-- `test_all_features.py` — 26 tests, covers happy paths + validation errors
+-## ✅ Completed & Verified (30/30 tests passing)
   for every primitive above
 - `demo_all_features.py` — real usage demo, all features working together
 - `demo_async.py` — async chains + speed comparison
@@ -86,28 +104,17 @@ so every session starts with focus instead of re-deciding priorities.
 
 ## 🚧 In Progress / Next Up
 
-### 1. RAG (Retrieval-Augmented Generation) — *next session*
-- New file: `educhain/core/rag.py` — `RAGChain` class
-- Decision made: `RAGChain` will inherit from `Runnable` (fits the single
-  input → single output contract cleanly, unlike `Tool` which genuinely
-  doesn't fit that shape)
-- Core pattern: `similarity_search()` → inject results into `PromptTemplate`
-  as context → run through existing `prompt | model | parser` chain
-- Key realization to land on: RAG isn't a new primitive, it's a *pattern*
-  built entirely from pieces we already have (Vector Store + PromptTemplate
-  + RunnableSequence)
-
-### 2. Agents
+### Agents — the final roadmap item
 - The capstone — built entirely from Tool Calling + Callbacks + a loop
 - LLM decides action → action executes → result feeds back → repeat until done
-- Must solve the message-list conversation gap in `ChatModel` here (deferred
-  from Tool Calling phase, see note above)
-- Once RAG exists, retrieval can be wrapped as a Tool — giving the Agent a
-  genuinely useful capability (search a real knowledge base) instead of only
-  toy demo functions
-
----
-
+- **Must solve first:** `ChatModel.invoke()` currently only accepts single
+  string prompts, not full message-list conversations. This was deliberately
+  deferred from the Tool Calling phase — Agents is where this gap becomes
+  unavoidable to fix, since an agent loop IS repeated multi-message
+  tool round-trips.
+- Once built, RAG can be wrapped as a Tool — giving the Agent a genuinely
+  useful capability (search a real knowledge base) instead of only
+  toy demo functions like weather or addition
 ## 📌 Known Cleanup Items
 
 - [x] ~~Check if `core/history.py` duplicates `memory/chat_history.py`~~ —
