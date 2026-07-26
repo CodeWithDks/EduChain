@@ -1,13 +1,41 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "educhain"
-version = "0.1.0"
-description = "Educational AI framework"
+name = "educhain-dks"
+version = "1.0.0"
+description = "A mini LangChain clone, built from scratch to understand how modern LLM frameworks work internally."
+readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Deepak Singh", email = "deepakniu09@gmail.com" }
+]
+keywords = ["llm", "langchain", "ai", "agents", "rag", "education", "tool-calling"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/CodeWithDks/EduChain"
+Repository = "https://github.com/CodeWithDks/EduChain"
+Documentation = "https://github.com/CodeWithDks/EduChain/tree/main/docs"
+Issues = "https://github.com/CodeWithDks/EduChain/issues"
 
 [tool.setuptools.packages.find]
-where = ["."]
 include = ["educhain*"]
+exclude = ["tests*", "examples*", "docs*"]
