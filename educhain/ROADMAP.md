@@ -102,42 +102,48 @@ so every session starts with focus instead of re-deciding priorities.
 
 ---
 
-## 🚧 In Progress / Next Up
-
-### Agents — the final roadmap item
-- The capstone — built entirely from Tool Calling + Callbacks + a loop
-- LLM decides action → action executes → result feeds back → repeat until done
-- **Must solve first:** `ChatModel.invoke()` currently only accepts single
-  string prompts, not full message-list conversations. This was deliberately
-  deferred from the Tool Calling phase — Agents is where this gap becomes
-  unavoidable to fix, since an agent loop IS repeated multi-message
-  tool round-trips.
-- Once built, RAG can be wrapped as a Tool — giving the Agent a genuinely
-  useful capability (search a real knowledge base) instead of only
-  toy demo functions like weather or addition
-## 📌 Known Cleanup Items
-
-- [x] ~~Check if `core/history.py` duplicates `memory/chat_history.py`~~ —
-      **Resolved: not a duplicate.** Correct separation — `core/history.py`
-      is the raw data store, `memory/chat_history.py` is the chain-integration
-      wrapper that depends on it. Keep both as-is.
-- [ ] `ChatModel` doesn't currently accept `callbacks=[...]` — decide if this
-      is worth adding for error visibility at the model level, or if
-      sequence-level callbacks are enough
-- [ ] Consider adding `ainvoke()` to `RunnableLambda` and `RunnablePassthrough`
-      explicitly, instead of relying on the base class fallback
-- [ ] `ChatModel.invoke()` message-list support — deferred to Agent phase
-      (see Tool Calling section above)
+### Agents
+- `educhain/core/agent.py` — `Agent` class, inherits from `Runnable`
+- Built entirely from existing pieces: `ChatModel` (with tools + message-list
+  support) + `has_tool_calls()`/`run_tool_calls()` + `CallbackHandler`
+- Loop: ask → detect tool call → execute → feed result back as `ToolMessage`
+  → repeat → stop on final answer or `max_iterations` safety limit
+- Construction-time validation: refuses to build an agent with no tools bound
+- **Required fixing `ChatModel.invoke()` to accept message lists, not just
+  strings** — the gap deliberately deferred from the Tool Calling phase,
+  solved here with a real concrete requirement driving the design
+- Verified: correctly selects tools, correctly abstains when no tool is
+  needed, correctly wraps `RAGChain` as a `Tool` (full-stack integration:
+  Agent → Tool → RAG → VectorStore, all working together)
+- `max_iterations` safety net proven to work under adversarial conditions
+  (a deliberately baited tool triggered a real `RuntimeError`, not an
+  infinite loop)
 
 ---
 
-## Guiding Principle
+## 🎯 v1.0 Complete
 
-Every feature gets built in **dependency order**, not "coolest first."
-Async → Callbacks → Tool Calling → Vector Stores → RAG → Agents.
-Each one is genuinely needed by the next — skipping ahead means rebuilding
-things twice. This order is deliberate, not arbitrary.
+Every planned feature is built, tested, and demonstrated working together:
+Streaming → Async → Callbacks → Tool Calling → Vector Stores → RAG → Agents.
+
+The dependency-order build strategy held up end to end — nothing had to be
+rebuilt or retrofitted. Each feature was a genuine prerequisite for the
+next, not just a convenient order.
 
 ---
 
-*Last updated: after completing Vector Stores, all 26 tests passing.*
+## 📌 Possible Future Directions (not committed, just ideas)
+
+- Persist `ChatMessageHistory` / `InMemoryVectorStore` to disk or a real DB
+- Swap `InMemoryVectorStore` for a real backend (FAISS/Chroma) behind the
+  same interface — RAGChain's duck-typing already supports this with zero
+  changes
+- Multi-agent coordination (one agent delegating to another)
+- Streaming support inside the Agent loop (stream the final answer, not
+  just invoke)
+- `RunnableLambda`/`RunnablePassthrough` explicit `ainvoke()` overrides
+  (currently rely on base class fallback — works, but not yet optimized)
+
+---
+
+*v1.0 — all 36 tests passing. Built from scratch, one dependency at a time.*

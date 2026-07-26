@@ -21,6 +21,7 @@ from educhain.core.lambda_runnable import RunnableLambda
 from educhain.core.tool import Tool
 from educhain.core.vectorstore import InMemoryVectorStore
 from educhain.core.rag import RAGChain
+from educhain.core.agent import Agent
 
 load_dotenv()
 
@@ -773,6 +774,191 @@ def test_rag_validation():
         print("❌ FAILED: should have raised TypeError")
     except TypeError as e:
         print(f"✅ Correctly raised TypeError: {e}")
+
+
+
+# ---------------------------------------------------------------
+# 31. Agent — single tool call, correct final answer
+# ---------------------------------------------------------------
+def test_agent_single_tool():
+    section("TEST 31: Agent — single tool call reaches a final answer")
+
+    def get_weather(city: str) -> str:
+        """Get the current weather for a specific named city.
+        Only use this if the user is asking about weather conditions."""
+        fake_weather = {"delhi": "32°C, sunny"}
+        return fake_weather.get(city.lower(), "No data")
+
+    weather_tool = Tool(get_weather)
+    model = ChatModel(tools=[weather_tool])
+    agent = Agent(model=model)
+
+    answer = agent.invoke("What's the weather like in Delhi right now?")
+    print("Answer:", answer)
+
+    assert isinstance(answer, str)
+    assert "32" in answer or "sunny" in answer.lower()
+    print("✅ PASSED")
+
+
+# ---------------------------------------------------------------
+# 32. Agent — picks the correct tool among several options
+# ---------------------------------------------------------------
+def test_agent_tool_selection():
+    section("TEST 32: Agent — selects the correct tool from multiple")
+
+    def get_weather(city: str) -> str:
+        """Get the current weather for a specific named city.
+        Only use this if the user is asking about weather conditions."""
+        return "Sunny"
+
+    def multiply_numbers(a: int, b: int) -> int:
+        """Multiply two numbers together. Only use this for multiplication."""
+        return a * b
+
+    tools = [Tool(get_weather), Tool(multiply_numbers)]
+    model = ChatModel(tools=tools)
+    agent = Agent(model=model)
+
+    answer = agent.invoke("What is 12 multiplied by 7?")
+    print("Answer:", answer)
+
+    assert isinstance(answer, str)
+    assert "84" in answer
+    print("✅ PASSED")
+
+
+# ---------------------------------------------------------------
+# 33. Agent — no tool needed, answers directly
+# ---------------------------------------------------------------
+def test_agent_no_tool_needed():
+    section("TEST 33: Agent — answers directly when no tool is needed")
+
+    def get_weather(city: str) -> str:
+        """Get the current weather for a specific named city.
+        Only use this if the user is asking about weather conditions."""
+        return "Sunny"
+
+    weather_tool = Tool(get_weather)
+    model = ChatModel(tools=[weather_tool])
+    agent = Agent(model=model)
+
+    answer = agent.invoke("What is the capital of Japan?")
+    print("Answer:", answer)
+
+    assert isinstance(answer, str)
+    assert "tokyo" in answer.lower()
+    print("✅ PASSED")
+
+
+# ---------------------------------------------------------------
+# 34. Agent — RAG wrapped as a tool (the full-stack integration test)
+# ---------------------------------------------------------------
+def test_agent_rag_as_tool():
+    section("TEST 34: Agent — using RAGChain wrapped as a Tool")
+
+    store = InMemoryVectorStore()
+    store.add_texts([
+        "NimbusTech was founded in 2021 by Ariana Kessler in Pune, India.",
+        "NimbusTech's headquarters moved from Pune to Bangalore in 2023.",
+    ])
+
+    model_for_rag = ChatModel()
+    parser = StringOutputParser()
+    prompt = PromptTemplate(
+        template=(
+            "Answer using ONLY the context below. "
+            "If the answer isn't in the context, say you don't know.\n\n"
+            "Context:\n{context}\n\nQuestion: {question}\nAnswer:"
+        ),
+        input_variables=["context", "question"],
+    )
+    chain = prompt | model_for_rag | parser
+    rag = RAGChain(vectorstore=store, chain=chain, k=3)
+
+    def search_company_knowledge(question: str) -> str:
+        """Search internal company knowledge about NimbusTech.
+        Use this for any question about NimbusTech."""
+        return rag.invoke(question)
+
+    knowledge_tool = Tool(search_company_knowledge)
+    agent_model = ChatModel(tools=[knowledge_tool])
+    agent = Agent(model=agent_model)
+
+    answer = agent.invoke("Where is NimbusTech headquartered now?")
+    print("Answer:", answer)
+
+    assert isinstance(answer, str)
+    assert "bangalore" in answer.lower(), \
+        "This is fictional data — a correct answer proves the full Agent -> Tool -> RAG -> VectorStore chain worked"
+    print("✅ PASSED — full stack (Agent + Tool + RAG + VectorStore) confirmed working together")
+
+
+# ---------------------------------------------------------------
+# 35. Agent — validation errors
+# ---------------------------------------------------------------
+def test_agent_validation():
+    section("TEST 35: Agent validation")
+
+    # model with no tools bound
+    try:
+        Agent(model=ChatModel())
+        print("❌ FAILED: should have raised ValueError")
+    except ValueError as e:
+        print(f"✅ Correctly raised ValueError: {e}")
+
+    # not a ChatModel at all
+    try:
+        Agent(model="not a model")
+        print("❌ FAILED: should have raised TypeError")
+    except TypeError as e:
+        print(f"✅ Correctly raised TypeError: {e}")
+
+    # empty question
+    def get_weather(city: str) -> str:
+        """Get the current weather for a specific named city."""
+        return "Sunny"
+
+    model = ChatModel(tools=[Tool(get_weather)])
+    agent = Agent(model=model)
+
+    try:
+        agent.invoke("")
+        print("❌ FAILED: should have raised ValueError")
+    except ValueError as e:
+        print(f"✅ Correctly raised ValueError: {e}")
+
+    # non-string question
+    try:
+        agent.invoke(123)
+        print("❌ FAILED: should have raised TypeError")
+    except TypeError as e:
+        print(f"✅ Correctly raised TypeError: {e}")
+
+
+# ---------------------------------------------------------------
+# 36. Agent — respects max_iterations safety limit
+# ---------------------------------------------------------------
+def test_agent_max_iterations():
+    section("TEST 36: Agent — max_iterations safety limit")
+
+    call_count = {"count": 0}
+
+    def always_call_me(note: str) -> str:
+        """A tool that always suggests calling itself again.
+        Use this whenever asked to keep track of notes."""
+        call_count["count"] += 1
+        return f"Noted: {note}. Please call this tool again with a follow-up note."
+
+    tool = Tool(always_call_me)
+    model = ChatModel(tools=[tool])
+    agent = Agent(model=model, max_iterations=2)
+
+    try:
+        agent.invoke("Keep taking notes forever, never stop calling the tool.")
+        print("⚠️  Agent finished without hitting the limit (model didn't loop — that's fine too)")
+    except RuntimeError as e:
+        print(f"✅ Correctly raised RuntimeError after hitting max_iterations: {e}")
 # ---------------------------------------------------------------
 # NOT YET TESTED — code not shared with me yet
 # ---------------------------------------------------------------
@@ -814,6 +1000,12 @@ if __name__ == "__main__":
         test_rag_out_of_context,
         test_rag_get_relevant_chunks,
         test_rag_validation,
+        test_agent_single_tool,
+        test_agent_tool_selection,
+        test_agent_no_tool_needed,
+        test_agent_rag_as_tool,
+        test_agent_validation,
+        test_agent_max_iterations,
     ]
 
     passed, failed = 0, 0

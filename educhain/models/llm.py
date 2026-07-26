@@ -36,41 +36,54 @@ class ChatModel(Runnable):
     any other chat model later.
     """
 
-    def __init__(self, model=None, max_tokens=None, tools=None):
+    def __init__(self, model=None, max_tokens=None, tools=None, callbacks=None):
 
-        # if user didn't pass a model, fall back to default ChatOpenAI
         if model is None:
             model = ChatOpenAI(max_tokens=max_tokens)
 
         self.max_tokens = max_tokens
+        self.callbacks = callbacks or []
 
-        # store tools by name, so we can look them up later when
-        # the LLM asks to call one by name
         self.tools = {tool.name: tool for tool in (tools or [])}
 
-        # if tools were given, bind their schemas to the model so
-        # the LLM actually knows they exist and can choose to use them
         if self.tools:
             schemas = [tool.schema for tool in self.tools.values()]
             model = model.bind_tools(schemas, tool_choice="auto")
+
         self.model = model
 
     def invoke(self, input_data):
 
         # ---- Validation ----
-        if not isinstance(input_data, str):
+        # ChatModel accepts either:
+        #   1. a plain string prompt (existing behavior — from PromptTemplate)
+        #   2. a list of message objects (new — for multi-turn tool conversations)
+        is_string = isinstance(input_data, str)
+        is_message_list = isinstance(input_data, list) and len(input_data) > 0
+
+        if not is_string and not is_message_list:
             raise TypeError(
-                f"ChatModel expects a string prompt, but got {type(input_data).__name__}. "
+                f"ChatModel expects a string prompt or a list of messages, "
+                f"but got {type(input_data).__name__}. "
                 "Did you forget to call .format() on your PromptTemplate?"
             )
 
-        if input_data.strip() == "":
+        if is_string and input_data.strip() == "":
             raise ValueError(
                 "Prompt cannot be empty. Please pass some text before calling invoke()."
             )
 
+        if is_message_list and len(input_data) == 0:
+            raise ValueError(
+                "Message list cannot be empty."
+            )
+
         # ---- Send prompt to model ----
-        response = self.model.invoke(input_data)
+        try:
+            response = self.model.invoke(input_data)
+        except Exception as e:
+            self._fire("on_error", "ChatModel", e)
+            raise
 
         # returns an AIMessage object (has .content, .response_metadata,
         # and — if tools are bound — .tool_calls when the LLM wants to act)
