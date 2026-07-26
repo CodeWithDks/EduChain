@@ -174,9 +174,9 @@ OPENAI_API_KEY=your_api_key_here
 ### Basic Chain
 
 ```python
-from educhain.prompts.prompt import PromptTemplate
-from educhain.models.llm import ChatModel
-from educhain.output_parsers.parser import StringOutputParser
+from educhain.prompts.prompt import PromptTemplate  # in short: from educhain.prompts import PromptTemplate
+from educhain.models.llm import ChatModel           # in short: from educhain.model import ChatModel
+from educhain.output_parsers.parser import StringOutputParser  # in short : from educhain.output_parser import StringOutputParser
 
 prompt = PromptTemplate(
     template="Explain {topic} in simple words.",
@@ -195,7 +195,7 @@ print(response)
 ### Agent with Tools + RAG
 
 ```python
-from educhain.models.llm import ChatModel
+from educhain.models.llm import ChatModel # in short: from educhain.model import ChatModel
 from educhain.core.tool import Tool
 from educhain.core.agent import Agent
 
