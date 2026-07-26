@@ -14,9 +14,9 @@ Run directly:
 
 from dotenv import load_dotenv
 
-from educhain.models.llm import ChatModel
-from educhain.prompts.prompt import PromptTemplate
-from educhain.output_parsers.parser import StringOutputParser
+from educhain.models import ChatModel
+from educhain.prompts import PromptTemplate
+from educhain.output_parsers import StringOutputParser
 from educhain.core.vectorstore import InMemoryVectorStore
 from educhain.core.rag import RAGChain
 
