@@ -3,6 +3,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Status](https://img.shields.io/badge/Status-v1.0-success.svg)
 ![Tests](https://img.shields.io/badge/Tests-36%2F36%20passing-brightgreen.svg)
+[![PyPI version](https://img.shields.io/pypi/v/educhain-dks.svg)](https://pypi.org/project/educhain-dks/)
 
 > **An educational Python framework inspired by LangChain — built from scratch to understand how modern LLM frameworks work internally.**
 
@@ -123,7 +124,15 @@ Because every component behaves consistently, they compose into flexible pipelin
 
 # ⚡ Installation
 
-Clone the repository
+
+### Option 1: Via PyPI (Recommended)
+
+```bash
+pip install educhain-dks
+
+
+
+### Option 2: Clone the repository
 
 ```bash
 git clone https://github.com/CodeWithDks/EduChain.git
