@@ -67,3 +67,10 @@ poetry.lock
 # Ignore compiled files
 *.dll
 *.exe
+
+*.egg-info/
+build/
+dist/
+.venv/
+myenv/
+venv/
