@@ -10,9 +10,9 @@ Run directly:
 
 from dotenv import load_dotenv
 
-from educhain.models import ChatModel
-from educhain.prompts import PromptTemplate
-from educhain.output_parsers import StringOutputParser, JsonOutputParser
+from educhain.models.llm import ChatModel
+from educhain.prompts.prompt import PromptTemplate
+from educhain.output_parsers.parser import StringOutputParser, JsonOutputParser
 from educhain.core import RunnableSequence
 from educhain.memory import ChatMessageHistory
 from educhain.core.parallel import RunnableParallel
