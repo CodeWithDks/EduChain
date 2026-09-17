@@ -73,16 +73,23 @@ EduChain/
 │   └── memory/
 │       └── chat_history.py     → ChatMessageHistory (chain wrapper)
 │
-├── test_all_features.py  → 36 tests, full coverage
-├── demo_all_features.py  → core primitives, real usage
-├── demo_async.py         → async execution + speed comparison
-├── demo_callbacks.py     → callback system
-├── demo_tools.py         → tool calling
-├── demo_vectorstore.py   → semantic search
-├── demo_rag.py           → retrieval-augmented generation
-├── demo_agent.py         → full agentic reasoning loop
+├── tests/
+│   ├── test_all_features.py  → 36 tests, full coverage
+│   ├── demo_all_features.py  → core primitives, real usage
+│   ├── demo_async.py         → async execution + speed comparison
+│   ├── demo_callbacks.py     → callback system
+│   ├── demo_tools.py         → tool calling
+│   ├── demo_vectorstore.py   → semantic search
+│   ├── demo_rag.py           → retrieval-augmented generation
+│   └── demo_agent.py         → full agentic reasoning loop
 │
-├── ROADMAP.md
+├── examples/
+│   ├── chatbot.py            → interactive chatbot demo (via Groq)
+│   ├── sequence_demo.py      → RunnableSequence walkthrough
+│   └── parallel_demo.py      → RunnableParallel walkthrough
+│
+├── docs/                 → 17 numbered deep-dive pages, one per component
+├── educhain/ROADMAP.md
 ├── README.md
 ├── requirements.txt
 └── LICENSE
@@ -174,6 +181,10 @@ Create a `.env` file
 OPENAI_API_KEY=your_api_key_here
 ```
 
+> The `examples/chatbot.py` demo uses Groq instead of OpenAI — add
+> `GROQ_API_KEY=your_groq_key_here` to the same `.env` file if you want to
+> run that one.
+
 ---
 
 ## 🚀 Quick Start
@@ -218,7 +229,7 @@ answer = agent.invoke("What's the weather like in Delhi?")
 print(answer)
 ```
 
-See `demo_agent.py` for a full example combining Tool Calling, RAG, and Callbacks together.
+See `tests/demo_agent.py` for a full example combining Tool Calling, RAG, and Callbacks together.
 
 ---
 
@@ -284,6 +295,8 @@ Pluggable observability hooks (`on_step_start`, `on_step_end`, `on_error`, etc.)
 
 ## 📚 Examples & Demos
 
+**`tests/`** — feature-by-feature demos, one per capability:
+
 ```
 demo_all_features.py  → core primitives working together
 demo_async.py          → async chains + speed comparison
@@ -297,7 +310,22 @@ demo_agent.py           → full agentic loop, including RAG-as-a-tool
 Run any demo directly:
 
 ```bash
-python demo_agent.py
+python tests/demo_agent.py
+```
+
+**`examples/`** — small, standalone usage examples:
+
+```
+sequence_demo.py  → RunnableSequence walkthrough
+parallel_demo.py  → RunnableParallel walkthrough
+chatbot.py        → interactive chatbot, using ChatGroq as the underlying model
+```
+
+`chatbot.py` uses Groq rather than OpenAI — it needs `GROQ_API_KEY` in your
+`.env` instead of `OPENAI_API_KEY`.
+
+```bash
+python examples/chatbot.py
 ```
 
 ---
@@ -307,7 +335,7 @@ python demo_agent.py
 Run the full test suite (36 tests — happy paths, validation, and full-stack integration):
 
 ```bash
-python test_all_features.py
+python tests/test_all_features.py
 ```
 
 ---
@@ -354,13 +382,13 @@ Topics covered include:
 - [ ] Streaming support inside the Agent loop
 - [ ] Batch processing (`.batch()`)
 
-See `ROADMAP.md` for full build history and design decisions.
+See `educhain/ROADMAP.md` for full build history and design decisions.
 
 ---
 
 ## 📖 Documentation
 
-Additional documentation is available in the `docs/` directory and `ROADMAP.md`.
+Additional documentation is available in the `docs/` directory and `educhain/ROADMAP.md`.
 
 ---
 
