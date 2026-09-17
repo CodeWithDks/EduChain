@@ -60,9 +60,9 @@ information, and reason across multiple steps.
 ## Quick links
 
 - **Project root:** [`../README.md`](../README.md) — installation, quick start, project structure
-- **Build history & design decisions:** [`../ROADMAP.md`](../ROADMAP.md) — what was built, in what order, and why
-- **Working examples:** `demo_*.py` files in the project root — each doc above has a matching runnable demo
-- **Test suite:** `test_all_features.py` — 36 tests covering every component documented here
+- **Build history & design decisions:** [`../educhain/ROADMAP.md`](../educhain/ROADMAP.md) — what was built, in what order, and why
+- **Working examples:** `demo_*.py` files in `../tests/` — each doc above has a matching runnable demo
+- **Test suite:** `../tests/test_all_features.py` — 36 tests covering every component documented here
 
 ---
 

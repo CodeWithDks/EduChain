@@ -24,7 +24,7 @@ from educhain.prompts.prompt import PromptTemplate
 from educhain.output_parsers.parser import StringOutputParser, JsonOutputParser
 from educhain.memory.chat_history import ChatMessageHistory
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 __all__ = [
     "Runnable", "RunnableSequence", "RunnableParallel", "RunnablePassthrough",
